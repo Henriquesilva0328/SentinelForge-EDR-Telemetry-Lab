@@ -4,6 +4,9 @@ from sentinelforge.api.v1.deps import require_ingest_token
 from sentinelforge.schemas.events import IngestAccepted, TelemetryEvent
 from sentinelforge.services.ingest_service import accept_event
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from sentinelforge.db.session import get_db_session
+
 router = APIRouter(prefix="/events", tags=["ingest"])
 
 
@@ -13,11 +16,15 @@ router = APIRouter(prefix="/events", tags=["ingest"])
     status_code=status.HTTP_202_ACCEPTED,
     dependencies=[Depends(require_ingest_token)],
 )
-async def ingest_event(request: Request, event: TelemetryEvent) -> IngestAccepted:
+async def ingest_event(
+    request: Request, 
+    event: TelemetryEvent,
+    session: AsyncSession = Depends (get_db_session),
+) -> IngestAccepted:
     """
     Recebe um evento validado, autentica a chamada e aceita o payload
     para processamento assíncrono futuro.
     """
     request_id = getattr(request.state, "request_id", "unknown")
-    await accept_event(event=event, request_id=request_id)
+    await accept_event(event=event, request_id=request_id, session = session)
     return IngestAccepted(status="accepted", event_id=event.event_id)
