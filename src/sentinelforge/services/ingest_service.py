@@ -4,26 +4,25 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sentinelforge.models import IngestAudit, RawEvent
-
 from sentinelforge.schemas.events import TelemetryEvent
 
 logger = logging.getLogger(__name__)
 
 
 async def accept_event(
-        *,
-        event: TelemetryEvent, 
-        request_id: str,
-        source_ip: str | None,
-        user_agent: str | None,
-        session: AsyncSession,
-) -> None:
+    *,
+    event: TelemetryEvent,
+    request_id: str,
+    source_ip: str | None,
+    user_agent: str | None,
+    session: AsyncSession,
+) -> str:
     """
-    Persiste o evento bruto e a trilha de auditoria da ingestão.
+    Persiste o evento bruto e registra a trilha de auditoria.
 
-    Se o event_id já existir, tratamos como duplicado e registramos
-    isso em auditoria sem quebrar a API. Em pipeline orientado a eventos,
-    idempotência básica evita muito ruído operacional.
+    Retorna:
+    - "accepted" quando o evento é novo
+    - "duplicate" quando o event_id já existe
     """
     existing_raw_event_id = await session.scalar(
         select(RawEvent.id).where(RawEvent.event_id == event.event_id)
@@ -52,7 +51,7 @@ async def accept_event(
                 "agent_id": event.agent.agent_id,
             },
         )
-        return
+        return "duplicate"
 
     raw_event = RawEvent(
         event_id=event.event_id,
@@ -72,9 +71,6 @@ async def accept_event(
     )
 
     session.add(raw_event)
-
-    # flush envia o INSERT sem fechar a transação, permitindo
-    # obter o id gerado para vincular a auditoria.
     await session.flush()
 
     audit_entry = IngestAudit(
@@ -89,15 +85,9 @@ async def accept_event(
     session.add(audit_entry)
 
     await session.commit()
-    """
-    Serviço de ingestão da fase inicial.
 
-    Nesta entrega ele apenas registra o aceite do evento.
-    Depois vamos persistir em banco, publicar em Kafka
-    e abrir trilha de auditoria.
-    """
     logger.info(
-        "telemetry event accepted",
+        "telemetry event persisted",
         extra={
             "request_id": request_id,
             "event_id": str(event.event_id),
@@ -107,3 +97,5 @@ async def accept_event(
             "raw_event_id": raw_event.id,
         },
     )
+
+    return "accepted"
