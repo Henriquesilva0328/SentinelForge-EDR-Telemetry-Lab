@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: sentinelforge
       POSTGRES_USER: sentinel
-      POSTGRES_PASSWORD: sentinel1
+      POSTGRES_PASSWORD: sentinel
 
     ports:
       - "5432:5432"
