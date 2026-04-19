@@ -22,9 +22,21 @@ async def ingest_event(
     session: AsyncSession = Depends (get_db_session),
 ) -> IngestAccepted:
     """
-    Recebe um evento validado, autentica a chamada e aceita o payload
-    para processamento assíncrono futuro.
+    Recebe um evento validado e persiste a ingestão.
+
+    Já capturamos metadados úteis da requisição para auditoria,
+    como IP de origem e user-agent.
     """
     request_id = getattr(request.state, "request_id", "unknown")
-    await accept_event(event=event, request_id=request_id, session = session)
+    source_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    await accept_event(
+        event=event,
+        request_id=request_id,
+        source_ip=source_ip,
+        user_agent=user_agent,
+        session=session,
+    )
+
     return IngestAccepted(status="accepted", event_id=event.event_id)
