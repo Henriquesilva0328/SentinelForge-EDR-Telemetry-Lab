@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     # URL do banco, ainda não usada nesta fase, mas já preparada
     db_url: str = "postgresql+asyncpg://sentinel:sentinel@localhost:5432/sentinelforge"
 
+    # URL usada pelo Alembic para migrations
+    db_migration_url: str = "postgresql+psycopg://sentinel:sentinel@localhost:5432/sentinelforge"
 
 @lru_cache
 def get_settings() -> Settings:
