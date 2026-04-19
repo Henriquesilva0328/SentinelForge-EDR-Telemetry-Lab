@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
 from enum import StrEnum
 from typing import Any, Literal
-from uuid import UUID, uuid4
-
+from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -38,7 +37,10 @@ class TelemetryEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     schema_version: Literal["1.0"] = "1.0"
-    event_id: UUID = Field(default_factory=uuid4)
+    # O event_id deve vir do produtor/agente.
+    # Isso torna a deduplicação previsível e auditável.
+    event_id: UUID
+
     tenant_id: str = Field(min_length=3, max_length=64, pattern=r"^[a-zA-Z0-9._-]+$")
     category: EventCategory
     occurred_at: datetime
@@ -63,6 +65,10 @@ class TelemetryEvent(BaseModel):
 class IngestAccepted(BaseModel):
     """
     Resposta da API quando o evento é aceito para processamento.
+    status indica que a requisição foi aceita pela API.
+    decision indica se o evento foi realmente persistido
+    como novo ou tratado como duplicado.
     """
     status: Literal["accepted"]
+    decision: Literal["accepted", "duplicate"]
     event_id: UUID
