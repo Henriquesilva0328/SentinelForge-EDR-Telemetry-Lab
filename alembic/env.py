@@ -14,6 +14,9 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 settings = get_settings()
+
+# Sobrescreve a URL do alembic.ini com a configuração real da aplicação.
+# Isso evita divergência entre o ambiente local e o que o Alembic usa.
 config.set_main_option("sqlalchemy.url", settings.db_migration_url)
 
 target_metadata = Base.metadata
@@ -22,8 +25,6 @@ target_metadata = Base.metadata
 def run_migrations_offline() -> None:
     """
     Executa migrations em modo offline.
-
-    Útil quando queremos gerar SQL sem abrir conexão.
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -40,7 +41,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """
-    Executa migrations em modo online, conectando de fato no banco.
+    Executa migrations em modo online.
     """
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
