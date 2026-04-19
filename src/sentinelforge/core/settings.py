@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     # Token de autenticação do endpoint de ingestão no MVP
     ingest_shared_token: SecretStr = Field(
-        default=SecretStr("replace-this-in-env")
+        default=SecretStr("sentinel-ingest-dev-token")
     )
 
     # URL do banco, ainda não usada nesta fase, mas já preparada
