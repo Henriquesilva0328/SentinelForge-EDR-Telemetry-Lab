@@ -20,6 +20,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
+  kafka:
+    image: apache/kafka:4.1.2
+    container_name: sentinelforge-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      
 volumes:
   sentinelforge_postgres_data:
