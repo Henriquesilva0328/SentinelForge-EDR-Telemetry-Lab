@@ -5,6 +5,7 @@ from sentinelforge.api.v1.deps import require_ingest_token
 from sentinelforge.db.session import get_db_session
 from sentinelforge.schemas.events import IngestAccepted, TelemetryEvent
 from sentinelforge.services.ingest_service import accept_event
+from sentinelforge.services.publish_service import publish_raw_ingested_event
 
 router = APIRouter(prefix="/events", tags=["ingest"])
 
@@ -28,7 +29,7 @@ async def ingest_event(
     source_ip = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
 
-    decision = await accept_event(
+    persistence_result = await accept_event(
         event=event,
         request_id=request_id,
         source_ip=source_ip,
@@ -36,8 +37,15 @@ async def ingest_event(
         session=session,
     )
 
+    if persistence_result.decision == "accepted":
+        await publish_raw_ingested_event(
+            event=event,
+            raw_event_id=persistence_result.raw_event_id,
+            request_id=request_id,
+        )
+
     return IngestAccepted(
         status="accepted",
-        decision=decision,
+        decision=persistence_result.decision,
         event_id=event.event_id,
     )
