@@ -8,6 +8,8 @@ from sentinelforge.db.base import Base
 from sentinelforge.models.ingest_audit import IngestAudit  # noqa: F401
 from sentinelforge.models.normalized_event import NormalizedEvent  # noqa: F401
 from sentinelforge.models.raw_event import RawEvent  # noqa: F401
+from sentinelforge.models.alert import Alert  # noqa: F401
+from sentinelforge.models.alert_evidence import AlertEvidence  # noqa: F401
 
 config = context.config
 
