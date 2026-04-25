@@ -39,6 +39,8 @@ async def run() -> None:
 
     await consumer.start()
 
+    # Sobe o exporter Prometheus do worker em uma porta dedicada.
+    # Isso permite observar o detector sem depender da API.
     if settings.metrics_enabled:
         start_worker_metrics_server(
             worker="detector",
