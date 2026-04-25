@@ -60,6 +60,19 @@ class Settings(BaseSettings):
     # Diretório onde os relatórios do replay serão gravados.
     replay_output_dir: str = "artifacts/replay"
 
+    # Hardening de entrada HTTP
+    max_request_body_bytes: int = 262_144
+    require_json_content_type: bool = True
+
+    # Limites estruturais do payload de telemetria
+    telemetry_payload_max_keys: int = 64
+    telemetry_payload_max_depth: int = 6
+    telemetry_payload_max_items: int = 64
+    telemetry_payload_max_string_length: int = 2048
+
+    # Headers de segurança
+    security_headers_enabled: bool = True
+
 @lru_cache
 def get_settings() -> Settings:
     """
