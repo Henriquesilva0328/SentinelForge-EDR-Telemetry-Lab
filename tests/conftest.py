@@ -1,15 +1,13 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from sentinelforge.main import app
-
 
 class _FakeProducerManager:
     """
     Fake simples do producer Kafka.
 
     Nos testes de API não queremos depender de Kafka real.
-    Então neutralizamos startup/shutdown do producer.
+    Então neutralizamos startup e shutdown do producer.
     """
 
     async def start(self) -> None:
@@ -24,8 +22,8 @@ def patch_app_lifespan_dependencies(monkeypatch):
     """
     Evita que o lifespan da aplicação tente falar com Kafka real.
 
-    Isso mantém os testes de API rápidos, determinísticos
-    e independentes da infraestrutura externa.
+    O patch é aplicado antes de importarmos a aplicação dentro
+    da fixture do client, reduzindo efeitos colaterais no import.
     """
     monkeypatch.setattr(
         "sentinelforge.main.get_kafka_producer_manager",
@@ -38,8 +36,11 @@ async def async_client():
     """
     Cliente HTTP assíncrono acoplado diretamente ao app ASGI.
 
-    Isso permite testar a API sem subir Uvicorn de verdade.
+    Importamos o app dentro da fixture para evitar side effects
+    globais em tempo de import do conftest.
     """
+    from sentinelforge.main import app
+
     transport = ASGITransport(app=app)
 
     async with AsyncClient(
