@@ -70,7 +70,7 @@ sentinelforge-edr/
 │       └── workers/
 ├── tests/
 └── README.md
-
+```
 ## Additional Documentation
 
 - [Architecture](docs/architecture.md)
