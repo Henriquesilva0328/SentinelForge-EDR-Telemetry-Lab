@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sentinelforge.api.v1.deps import require_ingest_token
+from sentinelforge.api.v1.deps import require_ingest_token, require_json_content_type
 from sentinelforge.db.session import get_db_session
 from sentinelforge.observability.metrics import observe_ingest_result
 from sentinelforge.schemas.events import IngestAccepted, TelemetryEvent
@@ -15,13 +15,24 @@ router = APIRouter(prefix="/events", tags=["ingest"])
     "",
     response_model=IngestAccepted,
     status_code=status.HTTP_202_ACCEPTED,
-    dependencies=[Depends(require_ingest_token)],
+    dependencies=[
+        Depends(require_json_content_type),
+        Depends(require_ingest_token),
+    ],
 )
 async def ingest_event(
     request: Request,
     event: TelemetryEvent,
     session: AsyncSession = Depends(get_db_session),
 ) -> IngestAccepted:
+    """
+    Recebe um evento, persiste e publica no Kafka quando novo.
+
+    Nesta etapa já chega com:
+    - content-type validado
+    - autenticação validada
+    - payload mais endurecido
+    """
     request_id = getattr(request.state, "request_id", "unknown")
     source_ip = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
