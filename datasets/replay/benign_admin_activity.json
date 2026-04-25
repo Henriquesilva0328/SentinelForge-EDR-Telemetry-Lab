@@ -1,0 +1,63 @@
+{
+  "dataset_name": "benign-admin-activity",
+  "description": "Conjunto de eventos benignos que não deveria gerar alertas com as regras atuais.",
+  "expected_rule_ids": [],
+  "notes": "Serve como benchmark inicial de falso positivo.",
+  "events": [
+    {
+      "schema_version": "1.0",
+      "event_id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "tenant_id": "lab-acme",
+      "category": "process",
+      "occurred_at": "2026-04-25T14:05:00Z",
+      "agent": {
+        "agent_id": "agent-001",
+        "host_id": "host-001",
+        "hostname": "win-lab-01",
+        "platform": "windows",
+        "sensor_version": "0.1.0"
+      },
+      "payload": {
+        "process_name": "explorer.exe",
+        "pid": 2100,
+        "command_line": "C:\\Windows\\explorer.exe"
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "event_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+      "tenant_id": "lab-acme",
+      "category": "file",
+      "occurred_at": "2026-04-25T14:05:05Z",
+      "agent": {
+        "agent_id": "agent-001",
+        "host_id": "host-001",
+        "hostname": "win-lab-01",
+        "platform": "windows",
+        "sensor_version": "0.1.0"
+      },
+      "payload": {
+        "action": "read",
+        "file_path": "C:\\Users\\Public\\documento.txt"
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "event_id": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+      "tenant_id": "lab-acme",
+      "category": "auth",
+      "occurred_at": "2026-04-25T14:05:10Z",
+      "agent": {
+        "agent_id": "agent-001",
+        "host_id": "host-001",
+        "hostname": "win-lab-01",
+        "platform": "windows",
+        "sensor_version": "0.1.0"
+      },
+      "payload": {
+        "result": "success",
+        "user": "admin.local"
+      }
+    }
+  ]
+}

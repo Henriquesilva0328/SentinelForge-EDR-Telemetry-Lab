@@ -1,0 +1,29 @@
+{
+  "dataset_name": "encoded-powershell-positive",
+  "description": "Dataset mínimo com PowerShell codificado que deve gerar um alerta PROC-PS-ENC-001.",
+  "expected_rule_ids": [
+    "PROC-PS-ENC-001"
+  ],
+  "notes": "Este dataset representa um cenário malicioso simples e controlado.",
+  "events": [
+    {
+      "schema_version": "1.0",
+      "event_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "tenant_id": "lab-acme",
+      "category": "process",
+      "occurred_at": "2026-04-25T14:00:00Z",
+      "agent": {
+        "agent_id": "agent-001",
+        "host_id": "host-001",
+        "hostname": "win-lab-01",
+        "platform": "windows",
+        "sensor_version": "0.1.0"
+      },
+      "payload": {
+        "process_name": "powershell.exe",
+        "pid": 1234,
+        "command_line": "powershell.exe -EncodedCommand SQBmACgAJABQAFMAVgBlAHIAcwBpAG8AbgBUAGEAYgBsAGUAKQA="
+      }
+    }
+  ]
+}
