@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from sentinelforge.api.v1.router import api_router
 from sentinelforge.core.logging import configure_logging
 from sentinelforge.core.settings import get_settings
+from sentinelforge.messaging.producer import get_kafka_producer_manager
 from sentinelforge.middleware.request_context import RequestContextMiddleware
 
 settings = get_settings()
@@ -16,15 +17,24 @@ async def lifespan(_: FastAPI):
     """
     Controla startup e shutdown da aplicação.
 
-    Nesta fase usamos o startup para configurar o logging.
+    Nesta etapa iniciamos:
+    - logging
+    - producer Kafka
     """
     configure_logging()
-    yield
+
+    producer_manager = get_kafka_producer_manager()
+    await producer_manager.start()
+
+    try:
+        yield
+    finally:
+        await producer_manager.stop()
 
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 
