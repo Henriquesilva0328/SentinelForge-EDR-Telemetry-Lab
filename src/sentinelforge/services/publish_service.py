@@ -1,0 +1,66 @@
+import logging
+
+from sentinelforge.core.settings import get_settings
+from sentinelforge.messaging.producer import get_kafka_producer_manager
+from sentinelforge.schemas.events import TelemetryEvent
+
+logger = logging.getLogger(__name__)
+
+
+async def publish_raw_ingested_event(
+    *,
+    event: TelemetryEvent,
+    raw_event_id: int,
+    request_id: str,
+) -> None:
+    """
+    Publica no Kafka um envelope mínimo do evento aceito.
+
+    Nesta fase publicamos apenas eventos realmente novos.
+    Eventos duplicados ficam só na trilha de auditoria.
+    """
+    settings = get_settings()
+    producer_manager = get_kafka_producer_manager()
+
+    message = {
+        "message_type": "raw_ingested",
+        "schema_version": "1.0",
+        "request_id": request_id,
+        "event_id": str(event.event_id),
+        "raw_event_id": raw_event_id,
+        "tenant_id": event.tenant_id,
+        "category": event.category.value,
+        "occurred_at": event.occurred_at.isoformat(),
+        "agent": {
+            "agent_id": event.agent.agent_id,
+            "host_id": event.agent.host_id,
+            "hostname": event.agent.hostname,
+            "platform": event.agent.platform,
+            "sensor_version": event.agent.sensor_version,
+        },
+        "actor_user": event.actor_user,
+        "correlation_key": event.correlation_key,
+        "payload": event.payload,
+    }
+
+    metadata = await producer_manager.send_json(
+        topic=settings.kafka_topic_raw_ingested,
+        key=str(event.event_id),
+        value=message,
+        headers=[
+            ("message_type", b"raw_ingested"),
+            ("schema_version", b"1.0"),
+        ],
+    )
+
+    logger.info(
+        "telemetry event published to kafka",
+        extra={
+            "request_id": request_id,
+            "event_id": str(event.event_id),
+            "raw_event_id": raw_event_id,
+            "topic": metadata.topic,
+            "partition": metadata.partition,
+            "offset": metadata.offset,
+        },
+    )
