@@ -38,9 +38,9 @@ class Settings(BaseSettings):
     # URL usada pelo Alembic para migrations
     db_migration_url: str = "postgresql+psycopg://sentinel:sentinel1@localhost:5433/sentinelforge"
 
-    kafka_enable: bool = True
+    kafka_enabled: bool = True
     kafka_bootstrap_servers: str = "localhost:9092"
-    kkafka_client_id: str = "sentinelforge-ingest-api"
+    kafka_client_id: str = "sentinelforge-ingest-api"
     kafka_topic_raw_ingested: str = "telemetry.raw.ingested"
 
 @lru_cache
