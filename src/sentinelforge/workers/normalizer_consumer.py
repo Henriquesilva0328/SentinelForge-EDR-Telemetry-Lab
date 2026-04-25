@@ -8,6 +8,11 @@ from sentinelforge.core.logging import configure_logging
 from sentinelforge.core.settings import get_settings
 from sentinelforge.db.session import SessionFactory
 from sentinelforge.messaging.producer import get_kafka_producer_manager
+from sentinelforge.observability.metrics import (
+    observe_worker_message_result,
+    set_worker_down,
+    start_worker_metrics_server,
+)
 from sentinelforge.schemas.normalized import RawIngestedMessage
 from sentinelforge.services.normalization_service import (
     normalize_raw_ingested_message,
@@ -19,6 +24,12 @@ logger = logging.getLogger(__name__)
 
 
 async def run() -> None:
+    """
+    Worker de normalização.
+
+    Consome eventos brutos do Kafka, normaliza, persiste
+    e republica o evento normalizado.
+    """
     settings = get_settings()
     producer_manager = get_kafka_producer_manager()
 
@@ -32,6 +43,12 @@ async def run() -> None:
 
     await consumer.start()
     await producer_manager.start()
+
+    if settings.metrics_enabled:
+        start_worker_metrics_server(
+            worker="normalizer",
+            port=settings.metrics_normalizer_port,
+        )
 
     logger.info(
         "normalizer consumer started",
@@ -63,6 +80,11 @@ async def run() -> None:
 
                 await consumer.commit()
 
+                observe_worker_message_result(
+                    worker="normalizer",
+                    result="success",
+                )
+
                 logger.info(
                     "raw ingested event normalized",
                     extra={
@@ -76,10 +98,18 @@ async def run() -> None:
                     },
                 )
             except Exception:
+                observe_worker_message_result(
+                    worker="normalizer",
+                    result="error",
+                )
                 logger.exception("failed to normalize consumed event")
     finally:
         await consumer.stop()
         await producer_manager.stop()
+
+        if settings.metrics_enabled:
+            set_worker_down(worker="normalizer")
+
         logger.info("normalizer consumer stopped")
 
 
