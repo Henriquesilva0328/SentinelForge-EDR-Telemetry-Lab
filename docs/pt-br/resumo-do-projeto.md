@@ -13,3 +13,29 @@ O projeto recebe eventos de telemetria, valida contratos de ingestão, armazena 
 - geração de alertas baseada em regras com evidência estruturada
 - observabilidade com Prometheus e Grafana
 - datasets de replay para validação e benchmark de falso positivo
+
+## Tecnologias principais
+
+- Python
+- FastAPI
+- PostgreSQL
+- SQLAlchemy
+- Alembic
+- Kafka
+- Prometheus
+- Grafana
+- pytest
+- Ruff
+
+## Diferencial do projeto
+
+O principal diferencial do SentinelForge não é apenas receber eventos e gerar um alerta isolado. O projeto foi desenhado para demonstrar um fluxo completo de engenharia de detecção:
+
+- entrada segura
+- persistência bruta
+- processamento assíncrono
+- normalização
+- detecção baseada em regras
+- geração de evidência
+- observabilidade operacional
+- benchmark reproduzível
