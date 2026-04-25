@@ -7,6 +7,7 @@ from aiokafka import AIOKafkaConsumer
 from sentinelforge.core.logging import configure_logging
 from sentinelforge.core.settings import get_settings
 from sentinelforge.db.session import SessionFactory
+from sentinelforge.messaging.producer import get_kafka_producer_manager
 from sentinelforge.schemas.normalized import RawIngestedMessage
 from sentinelforge.services.normalization_service import (
     normalize_raw_ingested_message,
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 async def run() -> None:
     settings = get_settings()
+    producer_manager = get_kafka_producer_manager()
 
     consumer = AIOKafkaConsumer(
         settings.kafka_topic_raw_ingested,
@@ -29,6 +31,8 @@ async def run() -> None:
     )
 
     await consumer.start()
+    await producer_manager.start()
+
     logger.info(
         "normalizer consumer started",
         extra={
@@ -55,7 +59,7 @@ async def run() -> None:
                     await publish_normalized_event(
                         normalized_event=normalized_document,
                         normalized_event_id=result.normalized_event_id,
-                    )    
+                    )
 
                 await consumer.commit()
 
@@ -75,6 +79,7 @@ async def run() -> None:
                 logger.exception("failed to normalize consumed event")
     finally:
         await consumer.stop()
+        await producer_manager.stop()
         logger.info("normalizer consumer stopped")
 
 
