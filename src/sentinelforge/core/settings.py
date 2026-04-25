@@ -32,7 +32,7 @@ class Settings(BaseSettings):
         default=SecretStr("sentinel-ingest-dev-token")
     )
 
-    # URL do banco, ainda não usada nesta fase, mas já preparada
+    # URL do banco
     db_url: str = "postgresql+asyncpg://sentinel:sentinel1@localhost:5433/sentinelforge"
 
     # URL usada pelo Alembic para migrations
@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     kafka_bootstrap_servers: str = "localhost:9092"
     kafka_client_id: str = "sentinelforge-ingest-api"
     kafka_topic_raw_ingested: str = "telemetry.raw.ingested"
+
+    kafka_consumer_group_normalizer: str = "sentinelforge-normalizer"
+
+    normalization_version: str = "1.0"
 
 @lru_cache
 def get_settings() -> Settings:
