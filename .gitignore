@@ -11,3 +11,9 @@ build/
 install_log.txt
 .idea/
 .vscode/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+artifacts/replay/
+coverage.xml
+htmlcov/
