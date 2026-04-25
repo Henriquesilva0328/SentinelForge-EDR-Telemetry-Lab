@@ -49,6 +49,10 @@ class Settings(BaseSettings):
 
     normalization_version: str = "1.0"
 
+    metrics_enabled: bool = True
+    metrics_normalizer_port: int = 9101
+    metrics_detector_port: int = 9102
+
 @lru_cache
 def get_settings() -> Settings:
     """
