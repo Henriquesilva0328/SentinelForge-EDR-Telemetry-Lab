@@ -12,6 +12,7 @@ from sentinelforge.services.normalization_service import (
     normalize_raw_ingested_message,
     persist_normalized_event,
 )
+from sentinelforge.services.normalized_publish_service import publish_normalized_event
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,12 @@ async def run() -> None:
                         normalized_event=normalized_document,
                         session=session,
                     )
+
+                if result.decision == "accepted" and result.normalized_event_id is not None:
+                    await publish_normalized_event(
+                        normalized_event=normalized_document,
+                        normalized_event_id=result.normalized_event_id,
+                    )    
 
                 await consumer.commit()
 
