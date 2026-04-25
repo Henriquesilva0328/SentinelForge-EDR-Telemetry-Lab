@@ -2,6 +2,7 @@ import logging
 
 from sentinelforge.core.settings import get_settings
 from sentinelforge.messaging.producer import get_kafka_producer_manager
+from sentinelforge.observability.metrics import observe_kafka_publish
 from sentinelforge.schemas.normalized import NormalizedEventDocument, NormalizedPublishedMessage
 
 logger = logging.getLogger(__name__)
@@ -13,7 +14,7 @@ async def publish_normalized_event(
     normalized_event_id: int,
 ) -> None:
     """
-    Publica o evento normalizado no Kafka para a etapa de detecção.
+    Publica o evento normalizado para a camada de detecção.
     """
     settings = get_settings()
     producer_manager = get_kafka_producer_manager()
@@ -43,24 +44,36 @@ async def publish_normalized_event(
         normalized_payload=normalized_event.normalized_payload,
     )
 
-    metadata = await producer_manager.send_json(
-        topic=settings.kafka_topic_normalized,
-        key=str(normalized_event.event_id),
-        value=message.model_dump(mode="json"),
-        headers=[
-            ("message_type", b"normalized_event"),
-            ("normalization_version", b"1.0"),
-        ],
-    )
+    try:
+        metadata = await producer_manager.send_json(
+            topic=settings.kafka_topic_normalized,
+            key=str(normalized_event.event_id),
+            value=message.model_dump(mode="json"),
+            headers=[
+                ("message_type", b"normalized_event"),
+                ("normalization_version", b"1.0"),
+            ],
+        )
 
-    logger.info(
-        "normalized event published to kafka",
-        extra={
-            "normalized_event_id": normalized_event_id,
-            "raw_event_id": normalized_event.raw_event_id,
-            "event_id": str(normalized_event.event_id),
-            "topic": metadata.topic,
-            "partition": metadata.partition,
-            "offset": metadata.offset,
-        },
-    )
+        observe_kafka_publish(
+            topic=settings.kafka_topic_normalized,
+            result="success",
+        )
+
+        logger.info(
+            "normalized event published to kafka",
+            extra={
+                "normalized_event_id": normalized_event_id,
+                "raw_event_id": normalized_event.raw_event_id,
+                "event_id": str(normalized_event.event_id),
+                "topic": metadata.topic,
+                "partition": metadata.partition,
+                "offset": metadata.offset,
+            },
+        )
+    except Exception:
+        observe_kafka_publish(
+            topic=settings.kafka_topic_normalized,
+            result="error",
+        )
+        raise

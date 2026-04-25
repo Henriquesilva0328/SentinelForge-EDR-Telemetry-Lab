@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sentinelforge.models.alert import Alert
 from sentinelforge.models.alert_evidence import AlertEvidence
+from sentinelforge.observability.metrics import observe_alert_created
 from sentinelforge.schemas.normalized import NormalizedPublishedMessage
 from sentinelforge.services.detection_service import DetectionMatch
 
@@ -25,7 +26,7 @@ async def persist_alerts(
     session: AsyncSession,
 ) -> AlertPersistenceSummary:
     """
-    Persiste alertas e evidências, evitando duplicação por
+    Persiste alertas e evidências, evitando repetição por
     (rule_id, normalized_event_id).
     """
     created_count = 0
@@ -77,6 +78,11 @@ async def persist_alerts(
             evidence_payload=match.evidence,
         )
         session.add(evidence)
+
+        observe_alert_created(
+            rule_id=match.rule_id,
+            severity=match.severity,
+        )
 
         created_count += 1
 

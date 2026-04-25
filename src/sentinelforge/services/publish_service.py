@@ -2,6 +2,7 @@ import logging
 
 from sentinelforge.core.settings import get_settings
 from sentinelforge.messaging.producer import get_kafka_producer_manager
+from sentinelforge.observability.metrics import observe_kafka_publish
 from sentinelforge.schemas.events import TelemetryEvent
 
 logger = logging.getLogger(__name__)
@@ -14,10 +15,9 @@ async def publish_raw_ingested_event(
     request_id: str,
 ) -> None:
     """
-    Publica no Kafka um envelope mínimo do evento aceito.
+    Publica o evento bruto ingerido para o próximo estágio do pipeline.
 
-    Nesta fase publicamos apenas eventos realmente novos.
-    Eventos duplicados ficam só na trilha de auditoria.
+    Registra métrica de sucesso ou erro da publicação.
     """
     settings = get_settings()
     producer_manager = get_kafka_producer_manager()
@@ -43,24 +43,36 @@ async def publish_raw_ingested_event(
         "payload": event.payload,
     }
 
-    metadata = await producer_manager.send_json(
-        topic=settings.kafka_topic_raw_ingested,
-        key=str(event.event_id),
-        value=message,
-        headers=[
-            ("message_type", b"raw_ingested"),
-            ("schema_version", b"1.0"),
-        ],
-    )
+    try:
+        metadata = await producer_manager.send_json(
+            topic=settings.kafka_topic_raw_ingested,
+            key=str(event.event_id),
+            value=message,
+            headers=[
+                ("message_type", b"raw_ingested"),
+                ("schema_version", b"1.0"),
+            ],
+        )
 
-    logger.info(
-        "telemetry event published to kafka",
-        extra={
-            "request_id": request_id,
-            "event_id": str(event.event_id),
-            "raw_event_id": raw_event_id,
-            "topic": metadata.topic,
-            "partition": metadata.partition,
-            "offset": metadata.offset,
-        },
-    )
+        observe_kafka_publish(
+            topic=settings.kafka_topic_raw_ingested,
+            result="success",
+        )
+
+        logger.info(
+            "telemetry event published to kafka",
+            extra={
+                "request_id": request_id,
+                "event_id": str(event.event_id),
+                "raw_event_id": raw_event_id,
+                "topic": metadata.topic,
+                "partition": metadata.partition,
+                "offset": metadata.offset,
+            },
+        )
+    except Exception:
+        observe_kafka_publish(
+            topic=settings.kafka_topic_raw_ingested,
+            result="error",
+        )
+        raise

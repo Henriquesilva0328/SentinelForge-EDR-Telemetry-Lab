@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sentinelforge.core.settings import get_settings
 from sentinelforge.models.normalized_event import NormalizedEvent
+from sentinelforge.observability.metrics import observe_normalization_result
 from sentinelforge.schemas.events import EventCategory
 from sentinelforge.schemas.normalized import NormalizedEventDocument, RawIngestedMessage
 
@@ -23,10 +24,7 @@ def normalize_raw_ingested_message(
     message: RawIngestedMessage,
 ) -> NormalizedEventDocument:
     """
-    Converte a mensagem bruta ingerida em um formato interno previsível.
-
-    A lógica aqui ainda é simples, mas já separa o contrato bruto
-    da representação que o pipeline vai usar nas próximas etapas.
+    Converte o contrato bruto ingerido em um formato interno consistente.
     """
     settings = get_settings()
 
@@ -117,10 +115,7 @@ async def persist_normalized_event(
     session: AsyncSession,
 ) -> NormalizationPersistenceResult:
     """
-    Persiste o evento normalizado.
-
-    A unicidade por raw_event_id garante que o replay ou reconsumo
-    do Kafka não gere múltiplos registros da mesma normalização.
+    Persiste o evento normalizado, evitando duplicação por raw_event_id.
     """
     existing_id = await session.scalar(
         select(NormalizedEvent.id).where(
@@ -129,6 +124,12 @@ async def persist_normalized_event(
     )
 
     if existing_id is not None:
+        observe_normalization_result(
+            decision="duplicate",
+            category=normalized_event.category.value,
+            event_action=normalized_event.event_action,
+        )
+
         logger.info(
             "normalized event already exists",
             extra={
@@ -169,6 +170,12 @@ async def persist_normalized_event(
     session.add(db_event)
     await session.flush()
     await session.commit()
+
+    observe_normalization_result(
+        decision="accepted",
+        category=normalized_event.category.value,
+        event_action=normalized_event.event_action,
+    )
 
     logger.info(
         "normalized event persisted",
