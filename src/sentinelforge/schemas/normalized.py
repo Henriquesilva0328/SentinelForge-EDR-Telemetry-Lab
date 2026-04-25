@@ -71,3 +71,39 @@ class NormalizedEventDocument(BaseModel):
     auth_result: str | None = None
 
     normalized_payload: dict[str, Any]
+    
+class NormalizedPublishedMessage(BaseModel):
+    """
+    Contrato publicado no tópico telemetry.normalized.
+
+    Esse é o formato que o detector consome para aplicar regras
+    sem depender diretamente da tabela do banco.
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    normalization_version: Literal["1.0"]
+    normalized_event_id: int = Field(gt=0)
+    raw_event_id: int = Field(gt=0)
+    event_id: UUID
+    tenant_id: str
+    category: EventCategory
+    event_action: str
+    occurred_at: datetime
+
+    agent_id: str
+    host_id: str
+    hostname: str
+    platform: str
+    sensor_version: str
+
+    actor_user: str | None = None
+    correlation_key: str | None = None
+
+    process_name: str | None = None
+    process_pid: int | None = None
+    file_path: str | None = None
+    destination_ip: str | None = None
+    destination_port: int | None = None
+    auth_result: str | None = None
+
+    normalized_payload: dict[str, Any]
