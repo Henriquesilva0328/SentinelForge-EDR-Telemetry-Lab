@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     metrics_normalizer_port: int = 9101
     metrics_detector_port: int = 9102
 
+    # Tempo de espera para o pipeline assíncrono “assentar”
+    # depois que o replay envia os eventos.
+    replay_settle_seconds: float = 4.0
+
+    # Diretório onde os relatórios do replay serão gravados.
+    replay_output_dir: str = "artifacts/replay"
+
 @lru_cache
 def get_settings() -> Settings:
     """
