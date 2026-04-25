@@ -1,4 +1,6 @@
 import logging
+from dataclasses import dataclass
+from typing import Literal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +10,10 @@ from sentinelforge.schemas.events import TelemetryEvent
 
 logger = logging.getLogger(__name__)
 
+@dataclass(slots=True)
+class IngestPersistenceResult:
+    decision: Literal["accepted", "duplicate"]
+    raw_event_id: int
 
 async def accept_event(
     *,
@@ -16,7 +22,7 @@ async def accept_event(
     source_ip: str | None,
     user_agent: str | None,
     session: AsyncSession,
-) -> str:
+) -> IngestPersistenceResult:
     """
     Persiste o evento bruto e registra a trilha de auditoria.
 
@@ -51,7 +57,10 @@ async def accept_event(
                 "agent_id": event.agent.agent_id,
             },
         )
-        return "duplicate"
+        return IngestPersistenceResult(
+            decision="duplicate",
+            raw_event_id=existing_raw_event_id,
+        )
 
     raw_event = RawEvent(
         event_id=event.event_id,
@@ -98,4 +107,7 @@ async def accept_event(
         },
     )
 
-    return "accepted"
+    return IngestPersistenceResult(
+        decision="accepted",
+        raw_event_id=raw_event.id,
+    )
