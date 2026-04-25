@@ -7,6 +7,12 @@ from aiokafka import AIOKafkaConsumer
 from sentinelforge.core.logging import configure_logging
 from sentinelforge.core.settings import get_settings
 from sentinelforge.db.session import SessionFactory
+from sentinelforge.observability.metrics import (
+    observe_detection_match,
+    observe_worker_message_result,
+    set_worker_down,
+    start_worker_metrics_server,
+)
 from sentinelforge.schemas.normalized import NormalizedPublishedMessage
 from sentinelforge.services.alert_service import persist_alerts
 from sentinelforge.services.detection_service import evaluate_normalized_event
@@ -15,6 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 async def run() -> None:
+    """
+    Worker detector.
+
+    Consome eventos normalizados do Kafka, aplica regras
+    e persiste alertas/evidências quando houver match.
+    """
     settings = get_settings()
 
     consumer = AIOKafkaConsumer(
@@ -26,6 +38,13 @@ async def run() -> None:
     )
 
     await consumer.start()
+
+    if settings.metrics_enabled:
+        start_worker_metrics_server(
+            worker="detector",
+            port=settings.metrics_detector_port,
+        )
+
     logger.info(
         "detector consumer started",
         extra={
@@ -42,6 +61,12 @@ async def run() -> None:
                 normalized_message = NormalizedPublishedMessage.model_validate(raw_payload)
 
                 matches = evaluate_normalized_event(normalized_message)
+
+                for match in matches:
+                    observe_detection_match(
+                        rule_id=match.rule_id,
+                        severity=match.severity,
+                    )
 
                 if matches:
                     async with SessionFactory() as session:
@@ -70,10 +95,23 @@ async def run() -> None:
                     )
 
                 await consumer.commit()
+
+                observe_worker_message_result(
+                    worker="detector",
+                    result="success",
+                )
             except Exception:
+                observe_worker_message_result(
+                    worker="detector",
+                    result="error",
+                )
                 logger.exception("failed to process normalized event in detector")
     finally:
         await consumer.stop()
+
+        if settings.metrics_enabled:
+            set_worker_down(worker="detector")
+
         logger.info("detector consumer stopped")
 
 
