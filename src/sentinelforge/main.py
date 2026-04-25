@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from time import perf_counter
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -8,6 +9,7 @@ from sentinelforge.core.logging import configure_logging
 from sentinelforge.core.settings import get_settings
 from sentinelforge.messaging.producer import get_kafka_producer_manager
 from sentinelforge.middleware.request_context import RequestContextMiddleware
+from sentinelforge.observability.metrics import observe_http_request
 
 settings = get_settings()
 
@@ -52,6 +54,32 @@ async def root() -> dict[str, str]:
         "status": "running",
     }
 
+@app.middleware("http")
+async def prometheus_http_metrics(request: Request, call_next):
+    started = perf_counter()
+    response = None
+
+    try:
+        response = await call_next(request)
+        return response
+    finally:
+        duration_seconds = perf_counter() - started
+        status_code = response.status_code if response is not None else 500
+
+        observe_http_request(
+            method=request.method,
+            path=request.url.path,
+            status_code=status_code,
+            duration_seconds=duration_seconds,
+        )
+
+
+@app.get("/", tags=["root"])
+async def root() -> dict[str, str]:
+    return {
+        "service": settings.service_name,
+        "status": "running",
+    }
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, _: Exception):
