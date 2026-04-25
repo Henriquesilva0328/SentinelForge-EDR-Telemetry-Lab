@@ -3,7 +3,7 @@ import asyncio
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import httpx
 from sqlalchemy import select
@@ -51,7 +51,7 @@ async def main() -> None:
     await asyncio.sleep(settings.replay_settle_seconds)
 
     observed_alerts = await _load_alerts_for_events(
-        event_ids=[str(event.event_id) for event in replay_events]
+        event_ids=[event.event_id for event in replay_events]
     )
 
     report = _build_report(
@@ -157,14 +157,12 @@ async def _send_events(
     return results
 
 
-async def _load_alerts_for_events(*, event_ids: list[str]) -> list[dict]:
+async def _load_alerts_for_events(*, event_ids: list[UUID]) -> list[dict]:
     """
     Busca no banco os alertas gerados pelos event_ids do replay.
 
-    Isso nos permite medir:
-    - quais regras dispararam
-    - quantos alertas surgiram
-    - se houve ruído
+    Usamos UUIDs de verdade aqui para não depender de cast implícito
+    do banco, que é o tipo de detalhe que adora estragar benchmark.
     """
     async with SessionFactory() as session:
         rows = await session.execute(
