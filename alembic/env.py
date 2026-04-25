@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 from sentinelforge.core.settings import get_settings
 from sentinelforge.db.base import Base
 from sentinelforge.models.ingest_audit import IngestAudit  # noqa: F401
+from sentinelforge.models.normalized_event import NormalizedEvent  # noqa: F401
 from sentinelforge.models.raw_event import RawEvent  # noqa: F401
 
 config = context.config
