@@ -42,8 +42,10 @@ class Settings(BaseSettings):
     kafka_bootstrap_servers: str = "localhost:9092"
     kafka_client_id: str = "sentinelforge-ingest-api"
     kafka_topic_raw_ingested: str = "telemetry.raw.ingested"
+    kafka_topic_normalized: str = "telemetry.normalized"
 
     kafka_consumer_group_normalizer: str = "sentinelforge-normalizer"
+    kafka_consumer_group_detector: str = "sentinelforge-detector"
 
     normalization_version: str = "1.0"
 
