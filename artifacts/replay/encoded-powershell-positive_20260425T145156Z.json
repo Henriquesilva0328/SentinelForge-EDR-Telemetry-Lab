@@ -1,0 +1,52 @@
+{
+  "dataset_name": "encoded-powershell-positive",
+  "description": "Dataset mínimo com PowerShell codificado que deve gerar um alerta PROC-PS-ENC-001.",
+  "notes": "Este dataset representa um cenário malicioso simples e controlado.",
+  "started_at": "2026-04-25T14:51:51.524964+00:00",
+  "events_sent": 1,
+  "accepted_count": 1,
+  "duplicate_count": 0,
+  "expected_rule_ids": [
+    "PROC-PS-ENC-001"
+  ],
+  "observed_rule_ids": [
+    "PROC-PS-ENC-001"
+  ],
+  "false_positive_rule_ids": [],
+  "false_negative_rule_ids": [],
+  "alerts_total": 1,
+  "passed": true,
+  "sent_events": [
+    {
+      "event_id": "d5233c31-f227-4fbb-ab2c-f9f97478f0c3",
+      "tenant_id": "lab-acme",
+      "category": "process",
+      "occurred_at": "2026-04-25T14:00:00+00:00"
+    }
+  ],
+  "api_results": [
+    {
+      "event_id": "d5233c31-f227-4fbb-ab2c-f9f97478f0c3",
+      "http_status": 202,
+      "response": {
+        "status": "accepted",
+        "decision": "accepted",
+        "event_id": "d5233c31-f227-4fbb-ab2c-f9f97478f0c3"
+      },
+      "dataset_name": "encoded-powershell-positive"
+    }
+  ],
+  "observed_alerts": [
+    {
+      "alert_id": 4,
+      "alert_uid": "1922beb6-9e19-4474-ac79-3d36982dd0ba",
+      "event_id": "d5233c31-f227-4fbb-ab2c-f9f97478f0c3",
+      "rule_id": "PROC-PS-ENC-001",
+      "rule_name": "Encoded PowerShell Command",
+      "severity": "high",
+      "title": "Encoded PowerShell command execution detected",
+      "hostname": "win-lab-01",
+      "created_at": "2026-04-25T14:51:52.110835+00:00"
+    }
+  ]
+}

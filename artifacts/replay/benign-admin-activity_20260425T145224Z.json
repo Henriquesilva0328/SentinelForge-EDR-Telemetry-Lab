@@ -1,0 +1,68 @@
+{
+  "dataset_name": "benign-admin-activity",
+  "description": "Conjunto de eventos benignos que não deveria gerar alertas com as regras atuais.",
+  "notes": "Serve como benchmark inicial de falso positivo.",
+  "started_at": "2026-04-25T14:52:19.628168+00:00",
+  "events_sent": 3,
+  "accepted_count": 3,
+  "duplicate_count": 0,
+  "expected_rule_ids": [],
+  "observed_rule_ids": [],
+  "false_positive_rule_ids": [],
+  "false_negative_rule_ids": [],
+  "alerts_total": 0,
+  "passed": true,
+  "sent_events": [
+    {
+      "event_id": "81c5aae5-419d-4186-9a38-bee33132561f",
+      "tenant_id": "lab-acme",
+      "category": "process",
+      "occurred_at": "2026-04-25T14:05:00+00:00"
+    },
+    {
+      "event_id": "0cf8ec87-2d1e-44e5-a30a-accc02b91073",
+      "tenant_id": "lab-acme",
+      "category": "file",
+      "occurred_at": "2026-04-25T14:05:05+00:00"
+    },
+    {
+      "event_id": "001700a4-f0bb-4b11-bb2b-125adea107ea",
+      "tenant_id": "lab-acme",
+      "category": "auth",
+      "occurred_at": "2026-04-25T14:05:10+00:00"
+    }
+  ],
+  "api_results": [
+    {
+      "event_id": "81c5aae5-419d-4186-9a38-bee33132561f",
+      "http_status": 202,
+      "response": {
+        "status": "accepted",
+        "decision": "accepted",
+        "event_id": "81c5aae5-419d-4186-9a38-bee33132561f"
+      },
+      "dataset_name": "benign-admin-activity"
+    },
+    {
+      "event_id": "0cf8ec87-2d1e-44e5-a30a-accc02b91073",
+      "http_status": 202,
+      "response": {
+        "status": "accepted",
+        "decision": "accepted",
+        "event_id": "0cf8ec87-2d1e-44e5-a30a-accc02b91073"
+      },
+      "dataset_name": "benign-admin-activity"
+    },
+    {
+      "event_id": "001700a4-f0bb-4b11-bb2b-125adea107ea",
+      "http_status": 202,
+      "response": {
+        "status": "accepted",
+        "decision": "accepted",
+        "event_id": "001700a4-f0bb-4b11-bb2b-125adea107ea"
+      },
+      "dataset_name": "benign-admin-activity"
+    }
+  ],
+  "observed_alerts": []
+}
